@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -95,7 +96,18 @@ func main() {
 				fmt.Println(d.Id)
 			}
 		}},
-		{desc: "Embed (turn a phrase into tokens)", function: func() {
+		{desc: "Embed (turn a phrase into tokens) (not working)", function: func() {
+			fmt.Println("List embedding modesl? y/N: ")
+			var ans byte
+			fmt.Scanf("%c", &ans)
+			if ans == 'y' {
+				for i, d := range models.Data {
+					if strings.Contains(d.Id, "embedding") {
+						fmt.Println(strconv.FormatInt(int64(i), 10)+".", d.Id)
+					}
+				}
+				fmt.Println()
+			}
 			var req ReqEmbeddings
 			fmt.Print("Enter index of model to use: ")
 			var modelIndex int

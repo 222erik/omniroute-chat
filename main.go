@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	tenv "github.com/muesli/termenv"
 	"log"
 	"net/http"
 	"os"
@@ -85,7 +86,11 @@ func main() {
 	var models RespModels
 	models.Get(BaseURL, APIKey)
 
+	output := tenv.NewOutput(os.Stdout)
+	output.ClearScreen()
+
 	fmt.Println("There are", len(models.Data), "models available")
+	fmt.Println()
 
 	options := []struct { // the functions are stored here for now
 		desc     string
@@ -95,9 +100,13 @@ func main() {
 			for _, d := range models.Data {
 				fmt.Println(d.Id)
 			}
+			time.Sleep(1000) // just so it doesnt exit immediatelly
+			s := output.String("press enter when done")
+			fmt.Println(s.Foreground(output.Color("#FFDDDD")))
+			fmt.Scanf("%v", nil)
 		}},
 		{desc: "Embed (turn a phrase into tokens) (not working)", function: func() {
-			fmt.Println("List embedding modesl? y/N: ")
+			fmt.Println("List embedding models? y/N: ")
 			var ans byte
 			fmt.Scanf("%c", &ans)
 			if ans == 'y' {
@@ -123,12 +132,12 @@ func main() {
 			req.EncodingFormat = "float"
 		}},
 		{desc: "Exit", function: func() {
+			output.ClearScreen()
 			os.Exit(0)
 		}},
 	}
 
 	for {
-		fmt.Println()
 		for i, s := range options {
 			fmt.Println(strconv.FormatInt(int64(i+1), 10)+".", s.desc)
 		}
@@ -143,6 +152,8 @@ func main() {
 			continue
 		}
 
-		options[option-1].function()
+		output.ClearScreen()
+		options[option-1].function() // execute the command!!
+		output.ClearScreen()
 	}
 }

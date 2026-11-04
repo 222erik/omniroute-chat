@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -49,6 +48,17 @@ func (r *RespModels) Get(burl, apikey string) {
 	}
 }
 
+func (r *RespModels) Execute(output *tenv.Output) {
+	leng := len(r.Data)
+	for i := range leng {
+		fmt.Println(r.Data[leng-i-1].Id)
+	}
+	time.Sleep(1000) // just so it doesnt exit immediatelly
+	s := output.String("press enter when done")
+	fmt.Println(s.Foreground(output.Color("#FFDDDD")))
+	fmt.Scanf("%v", nil)
+}
+
 type ReqEmbeddings struct {
 	Prompt         string `json:"input"`
 	Model          string `json:"model"`
@@ -83,63 +93,43 @@ func main() {
 		os.Exit(1)
 	}
 
-	var models RespModels
-	models.Get(BaseURL, APIKey)
-
 	output := tenv.NewOutput(os.Stdout)
 	output.ClearScreen()
 
-	fmt.Println("There are", len(models.Data), "models available")
-	fmt.Println()
-
-	options := []struct { // the functions are stored here for now
-		desc     string
-		function func()
-	}{
-		{desc: "List all models", function: func() {
-			for _, d := range models.Data {
-				fmt.Println(d.Id)
-			}
-			time.Sleep(1000) // just so it doesnt exit immediatelly
-			s := output.String("press enter when done")
-			fmt.Println(s.Foreground(output.Color("#FFDDDD")))
-			fmt.Scanf("%v", nil)
-		}},
-		{desc: "Embed (turn a phrase into tokens) (not working)", function: func() {
-			fmt.Println("List embedding models? y/N: ")
-			var ans byte
-			fmt.Scanf("%c", &ans)
-			if ans == 'y' {
-				for i, d := range models.Data {
-					if strings.Contains(d.Id, "embedding") {
-						fmt.Println(strconv.FormatInt(int64(i), 10)+".", d.Id)
-					}
-				}
-				fmt.Println()
-			}
-			var req ReqEmbeddings
-			fmt.Print("Enter index of model to use: ")
-			var modelIndex int
-			fmt.Scanf("%d", &modelIndex)
-			fmt.Println()
-			req.Model = models.Data[modelIndex].Id
-			fmt.Print("Enter num of dimensions: ")
-			fmt.Scanf("%d", &req.Dimensions)
-			fmt.Println()
-			fmt.Print("Enter your prompt: ")
-			fmt.Scanf("%s", &req.Prompt)
-			fmt.Println()
-			req.EncodingFormat = "float"
-		}},
-		{desc: "Exit", function: func() {
-			output.ClearScreen()
-			os.Exit(0)
-		}},
+	options := []string{
+		"List all models",
+		// {desc: "Embed (turn a phrase into tokens) (not working)", function: func() {
+		// 	fmt.Println("List embedding models? y/N: ")
+		// 	var ans byte
+		// 	fmt.Scanf("%c", &ans)
+		// 	if ans == 'y' {
+		// 		for i, d := range models.Data {
+		// 			if strings.Contains(d.Id, "embedding") {
+		// 				fmt.Println(strconv.FormatInt(int64(i), 10)+".", d.Id)
+		// 			}
+		// 		}
+		// 		fmt.Println()
+		// 	}
+		// 	var req ReqEmbeddings
+		// 	fmt.Print("Enter index of model to use: ")
+		// 	var modelIndex int
+		// 	fmt.Scanf("%d", &modelIndex)
+		// 	fmt.Println()
+		// 	req.Model = models.Data[modelIndex].Id
+		// 	fmt.Print("Enter num of dimensions: ")
+		// 	fmt.Scanf("%d", &req.Dimensions)
+		// 	fmt.Println()
+		// 	fmt.Print("Enter your prompt: ")
+		// 	fmt.Scanf("%s", &req.Prompt)
+		// 	fmt.Println()
+		// 	req.EncodingFormat = "float"
+		// }},
+		"Exit",
 	}
 
 	for {
 		for i, s := range options {
-			fmt.Println(strconv.FormatInt(int64(i+1), 10)+".", s.desc)
+			fmt.Println(strconv.FormatInt(int64(i+1), 10)+".", s)
 		}
 		fmt.Print("What do you want to do? : ")
 
@@ -153,7 +143,18 @@ func main() {
 		}
 
 		output.ClearScreen()
-		options[option-1].function() // execute the command!!
+		ExecuteCommand(option, output, BaseURL, APIKey)
 		output.ClearScreen()
+	}
+}
+
+func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
+	switch c {
+	case 1:
+		var models RespModels
+		models.Get(baseurl, apikey)
+		models.Execute(output)
+	case 2:
+		os.Exit(0)
 	}
 }

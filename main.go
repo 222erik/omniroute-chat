@@ -59,25 +59,34 @@ func (r *RespModels) Execute(output *tenv.Output) {
 	fmt.Scanf("%v", nil)
 }
 
-type ReqEmbeddings struct {
-	Prompt         string `json:"input"`
-	Model          string `json:"model"`
-	Dimensions     int    `json:"dimensions"`
-	EncodingFormat string `json:"encoding_format"` // Can only be "float" or "base64"
-}
+// type ReqEmbeddings struct {
+// 	Prompt         string `json:"input"`
+// 	Model          string `json:"model"`
+// 	Dimensions     int    `json:"dimensions"`
+// 	EncodingFormat string `json:"encoding_format"` // Can only be "float" or "base64"
+// }
 
-type RespEmbeddins struct {
-	Model  string `json:"model"`
-	Object string `json:"object"`
-	Usage  struct {
-		PromptTokens int `json:"prompt_tokens"`
-		TotalTokens  int `json:"total_tokens"`
-	} `json:"usage"`
-	Data struct {
-		Index     int    `json:"index"`
-		Object    string `json:"object"`
-		Embedding any    `json:"embedding"`
-	} `json:"data"`
+// type RespEmbeddins struct {
+// 	Model  string `json:"model"`
+// 	Object string `json:"object"`
+// 	Usage  struct {
+// 		PromptTokens int `json:"prompt_tokens"`
+// 		TotalTokens  int `json:"total_tokens"`
+// 	} `json:"usage"`
+// 	Data struct {
+// 		Index     int    `json:"index"`
+// 		Object    string `json:"object"`
+// 		Embedding any    `json:"embedding"`
+// 	} `json:"data"`
+// }
+
+type ReqChat struct {
+	Model       string  `json:"model"`
+	Stream      bool    `json:"stream"`      // show the model's response while it's generating
+	Temperature float32 `json:"temperature"` // the higher the more random
+	ToolUsage   string  `json:"took_choice"` // none, auto, required, or type:function
+	Verbosity   string  `json:"verbosity"`   // low, meduim, high
+	Messages []
 }
 
 func main() {
@@ -124,6 +133,7 @@ func main() {
 		// 	fmt.Println()
 		// 	req.EncodingFormat = "float"
 		// }},
+		"Chat with a model",
 		"Exit",
 	}
 
@@ -154,7 +164,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		var models RespModels
 		models.Get(baseurl, apikey)
 		models.Execute(output)
-	case 2:
+	case 3:
 		os.Exit(0)
 	}
 }

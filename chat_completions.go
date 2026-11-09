@@ -72,7 +72,8 @@ func (reqjson ChatCompletionReq) Send(baseURL, APIkey string) (*ChatCompletionRe
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("returned " + resp.Status)
+		respdata, _ := io.ReadAll(resp.Body)
+		return nil, errors.New("returned " + resp.Status + "\n" + string(respdata))
 	}
 	respdata, err := io.ReadAll(resp.Body)
 	if err != nil {

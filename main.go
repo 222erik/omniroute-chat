@@ -80,15 +80,6 @@ func (r *RespModels) Execute(output *tenv.Output) {
 // 	} `json:"data"`
 // }
 
-type ReqChat struct {
-	Model       string  `json:"model"`
-	Stream      bool    `json:"stream"`      // show the model's response while it's generating
-	Temperature float32 `json:"temperature"` // the higher the more random
-	ToolUsage   string  `json:"took_choice"` // none, auto, required, or type:function
-	Verbosity   string  `json:"verbosity"`   // low, meduim, high
-	Messages []
-}
-
 func main() {
 	BaseURL := os.Getenv("OMNIROUTE_BASE_URL")
 	if BaseURL == "" {

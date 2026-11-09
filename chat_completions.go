@@ -21,21 +21,21 @@ type chatAssistantMessage struct {
 	Refusal string `json:"refusal"`
 }
 
-type chatMessage struct {
+type ChatMessage struct {
 	Content string `json:"content"`
 	Role    string `json:"role"`
 }
 
-type ReqChat struct {
+type ChatCompletionReq struct {
 	Model       string        `json:"model"`
 	Stream      bool          `json:"stream"`      // show the model's response while it's generating
 	Temperature float32       `json:"temperature"` // the higher the more random
 	ToolUsage   string        `json:"took_choice"` // none, auto, required, or type:function
 	Verbosity   string        `json:"verbosity"`   // low, meduim, high
-	Messages    []chatMessage `json:"messages"`
+	Messages    []ChatMessage `json:"messages"`
 }
 
-type RespChat struct {
+type ChatCompletionResp struct {
 	Id    string `json:"id"`
 	Usage struct {
 		CompletionsTokens int `json:"completion_tokens"`
@@ -45,18 +45,20 @@ type RespChat struct {
 	Choices []struct { // every choice is a generated message my the model
 		FinishReason string `json:"finish_reason"` // 'stop' for successful
 		Index        int    `json:"index"`
-		chatMessage  `json:"message"`
+		ChatMessage  `json:"message"`
 	}
 }
 
-func (reqjson ReqChat) Send(baseURL, APIkey string) (*RespChat, error) {
+func (reqjson ChatCompletionReq) Send(baseURL, APIkey string) (*ChatCompletionResp, error) {
 	client := http.Client{
 		Timeout: 60 * time.Second,
 	}
 
-	var reqbyte []byte
-	json.Unmarshal(reqbyte, reqjson)
-	req, err := http.NewRequest("POST", baseURL, bytes.NewReader(reqbyte))
+	reqbyte, err := json.Marshal(reqjson)
+	if err != nil {
+		return nil, errors.New("couldn't marshal json")
+	}
+	req, err := http.NewRequest("POST", baseURL+"/chat/completions", bytes.NewReader(reqbyte))
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +78,7 @@ func (reqjson ReqChat) Send(baseURL, APIkey string) (*RespChat, error) {
 	if err != nil {
 		return nil, errors.New("couldn't read response data")
 	}
-	var respjson RespChat
+	var respjson ChatCompletionResp
 	err = json.Unmarshal(respdata, &respjson)
 	if err != nil {
 		return nil, errors.New("couldn't unmarshal response")

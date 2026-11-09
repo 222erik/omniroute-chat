@@ -155,6 +155,63 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		var models RespModels
 		models.Get(baseurl, apikey)
 		models.Execute(output)
+	case 2:
+		var messages []ChatMessage
+		var model string
+		stream := false
+		temperature := 0.0
+		toolusage := "none"
+		verbosity := "low"
+
+		for model == "" {
+			fmt.Print("Enter model ID: ")
+			fmt.Scanf("%s", &model)
+			fmt.Println()
+		}
+
+		var req ChatCompletionReq
+		req.Model = model
+		req.Stream = stream
+		req.Temperature = float32(temperature)
+		req.ToolUsage = toolusage
+		req.Verbosity = verbosity
+		req.Messages = messages
+
+		fmt.Println("type 'exit' to quit")
+		for {
+			s := output.String(">>> ")
+			fmt.Print(s.Foreground(output.Color("#FFDDDD")))
+			var prompt string
+			_, err := fmt.Scanf("%s", &prompt)
+			fmt.Println()
+			if err != nil {
+				continue
+			}
+			if prompt == "exit" {
+				break
+			}
+			fmt.Println()
+			messages = append(messages, ChatMessage{Role: "user", Content: prompt})
+			req.Messages = messages
+
+			resp, err := req.Send(baseurl, apikey)
+			if err != nil {
+				errstr := output.String(err.Error())
+				fmt.Println(errstr.Foreground(output.Color("#FF8888")))
+				continue
+			}
+
+			choice := resp.Choices[0]
+			respstr := output.String(choice.Content)
+			fmt.Println(respstr.Foreground(output.Color("#DDDDFF")))
+			fmt.Println("done because:", choice.FinishReason)
+			fmt.Println("usage:")
+			fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
+			fmt.Println("completion:", resp.Usage.CompletionsTokens, "tokens")
+			fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
+
+			messages = append(messages, choice.ChatMessage)
+		}
 	case 3:
 		os.Exit(0)
 	}

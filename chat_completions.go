@@ -9,25 +9,30 @@ import (
 	"time"
 )
 
+// these two aren't used
 type chatDevSystemUserFuncMessage struct {
 	Role    string `json:"role"` // system, developer, user, function
 	Content string `json:"content"`
 	Name    string `json:"name"` // your name
 }
-
 type chatAssistantMessage struct {
 	Content string `json:"content"`
 	Role    string `json:"role"` // always 'assistant'
 	Refusal string `json:"refusal"`
 }
 
+type chatMessage struct {
+	Content string `json:"content"`
+	Role    string `json:"role"`
+}
+
 type ReqChat struct {
-	Model       string                         `json:"model"`
-	Stream      bool                           `json:"stream"`      // show the model's response while it's generating
-	Temperature float32                        `json:"temperature"` // the higher the more random
-	ToolUsage   string                         `json:"took_choice"` // none, auto, required, or type:function
-	Verbosity   string                         `json:"verbosity"`   // low, meduim, high
-	Messages    []chatDevSystemUserFuncMessage `json:"messages"`
+	Model       string        `json:"model"`
+	Stream      bool          `json:"stream"`      // show the model's response while it's generating
+	Temperature float32       `json:"temperature"` // the higher the more random
+	ToolUsage   string        `json:"took_choice"` // none, auto, required, or type:function
+	Verbosity   string        `json:"verbosity"`   // low, meduim, high
+	Messages    []chatMessage `json:"messages"`
 }
 
 type RespChat struct {
@@ -38,9 +43,9 @@ type RespChat struct {
 		TotalTokens       int `json:"total_tokens"`
 	}
 	Choices []struct { // every choice is a generated message my the model
-		FinishReason         string `json:"finish_reason"` // 'stop' for successful
-		Index                int    `json:"index"`
-		chatAssistantMessage `json:"message"`
+		FinishReason string `json:"finish_reason"` // 'stop' for successful
+		Index        int    `json:"index"`
+		chatMessage  `json:"message"`
 	}
 }
 

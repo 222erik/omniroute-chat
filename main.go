@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
-	tenv "github.com/muesli/termenv"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	tenv "github.com/muesli/termenv"
 )
 
 type RespModels struct {
@@ -178,21 +180,22 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		req.Messages = messages
 
 		fmt.Println("type 'exit' to quit")
+		scanner := bufio.NewScanner(os.Stdin)
 		for {
 			s := output.String(">>> ")
 			fmt.Print(s.Foreground(output.Color("#FFDDDD")))
 			var prompt string
-			_, err := fmt.Scanf("%s", &prompt)
-			fmt.Println()
-			if err != nil {
+			scanner.Scan()
+			prompt = scanner.Text()
+			if prompt == "" {
 				continue
 			}
 			if prompt == "exit" {
 				break
 			}
-			fmt.Println()
 			messages = append(messages, ChatMessage{Role: "user", Content: prompt})
 			req.Messages = messages
+			fmt.Println(req.Messages)
 
 			resp, err := req.Send(baseurl, apikey)
 			if err != nil {
@@ -203,14 +206,16 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 
 			choice := resp.Choices[0]
 			respstr := output.String(choice.Content)
-			fmt.Println(respstr.Foreground(output.Color("#DDDDFF")))
+			fmt.Println(respstr.Foreground(output.Color("#CCCCFF")))
 			fmt.Println("done because:", choice.FinishReason)
 			fmt.Println("usage:")
 			fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
 			fmt.Println("completion:", resp.Usage.CompletionsTokens, "tokens")
 			fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
+			fmt.Println()
 
 			messages = append(messages, choice.ChatMessage)
+			fmt.Println(messages)
 		}
 	case 3:
 		os.Exit(0)

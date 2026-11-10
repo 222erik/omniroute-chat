@@ -51,7 +51,7 @@ type ChatCompletionResp struct {
 
 func (reqjson ChatCompletionReq) Send(baseURL, APIkey string) (*ChatCompletionResp, error) {
 	client := http.Client{
-		Timeout: 60 * time.Second,
+		Timeout: 600 * time.Second,
 	}
 
 	reqbyte, err := json.Marshal(reqjson)

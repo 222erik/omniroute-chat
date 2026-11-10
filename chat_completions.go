@@ -27,12 +27,13 @@ type ChatMessage struct {
 }
 
 type ChatCompletionReq struct {
-	Model       string        `json:"model"`
-	Stream      bool          `json:"stream"`      // show the model's response while it's generating
-	Temperature float32       `json:"temperature"` // the higher the more random
-	ToolUsage   string        `json:"took_choice"` // none, auto, required, or type:function
-	Verbosity   string        `json:"verbosity"`   // low, meduim, high
-	Messages    []ChatMessage `json:"messages"`
+	Model           string        `json:"model"`
+	ReasoningEffort string        `json:"reasoning_effort"` // how much to 'think'
+	Stream          bool          `json:"stream"`           // show the model's response while it's generating
+	Temperature     float32       `json:"temperature"`      // the higher the more random
+	ToolUsage       string        `json:"took_choice"`      // none, auto, required, or type:function
+	Verbosity       string        `json:"verbosity"`        // low, meduim, high
+	Messages        []ChatMessage `json:"messages"`
 }
 
 type ChatCompletionResp struct {

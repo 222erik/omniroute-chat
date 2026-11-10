@@ -160,6 +160,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 	case 2:
 		var messages []ChatMessage
 		var model string
+		resoning := "none"
 		stream := false
 		temperature := 0.0
 		toolusage := "none"
@@ -173,6 +174,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 
 		var req ChatCompletionReq
 		req.Model = model
+		req.ReasoningEffort = resoning
 		req.Stream = stream
 		req.Temperature = float32(temperature)
 		req.ToolUsage = toolusage
@@ -195,7 +197,6 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			}
 			messages = append(messages, ChatMessage{Role: "user", Content: prompt})
 			req.Messages = messages
-			fmt.Println(req.Messages)
 
 			resp, err := req.Send(baseurl, apikey)
 			if err != nil {
@@ -215,7 +216,6 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			fmt.Println()
 
 			messages = append(messages, choice.ChatMessage)
-			fmt.Println(messages)
 		}
 	case 3:
 		os.Exit(0)

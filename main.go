@@ -61,27 +61,6 @@ func (r *RespModels) Execute(output *tenv.Output) {
 	fmt.Scanf("%v", nil)
 }
 
-// type ReqEmbeddings struct {
-// 	Prompt         string `json:"input"`
-// 	Model          string `json:"model"`
-// 	Dimensions     int    `json:"dimensions"`
-// 	EncodingFormat string `json:"encoding_format"` // Can only be "float" or "base64"
-// }
-
-// type RespEmbeddins struct {
-// 	Model  string `json:"model"`
-// 	Object string `json:"object"`
-// 	Usage  struct {
-// 		PromptTokens int `json:"prompt_tokens"`
-// 		TotalTokens  int `json:"total_tokens"`
-// 	} `json:"usage"`
-// 	Data struct {
-// 		Index     int    `json:"index"`
-// 		Object    string `json:"object"`
-// 		Embedding any    `json:"embedding"`
-// 	} `json:"data"`
-// }
-
 func main() {
 	BaseURL := os.Getenv("OMNIROUTE_BASE_URL")
 	if BaseURL == "" {
@@ -100,33 +79,8 @@ func main() {
 
 	options := []string{
 		"List all models",
-		// {desc: "Embed (turn a phrase into tokens) (not working)", function: func() {
-		// 	fmt.Println("List embedding models? y/N: ")
-		// 	var ans byte
-		// 	fmt.Scanf("%c", &ans)
-		// 	if ans == 'y' {
-		// 		for i, d := range models.Data {
-		// 			if strings.Contains(d.Id, "embedding") {
-		// 				fmt.Println(strconv.FormatInt(int64(i), 10)+".", d.Id)
-		// 			}
-		// 		}
-		// 		fmt.Println()
-		// 	}
-		// 	var req ReqEmbeddings
-		// 	fmt.Print("Enter index of model to use: ")
-		// 	var modelIndex int
-		// 	fmt.Scanf("%d", &modelIndex)
-		// 	fmt.Println()
-		// 	req.Model = models.Data[modelIndex].Id
-		// 	fmt.Print("Enter num of dimensions: ")
-		// 	fmt.Scanf("%d", &req.Dimensions)
-		// 	fmt.Println()
-		// 	fmt.Print("Enter your prompt: ")
-		// 	fmt.Scanf("%s", &req.Prompt)
-		// 	fmt.Println()
-		// 	req.EncodingFormat = "float"
-		// }},
 		"Chat with a model",
+		"Embed something",
 		"Exit",
 	}
 
@@ -218,6 +172,48 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			messages = append(messages, choice.ChatMessage)
 		}
 	case 3:
+		var model string
+		dimensions := 200
+		format := "float"
+
+		for model == "" {
+			fmt.Print("Enter model ID: ")
+			fmt.Scanf("%s", &model)
+			fmt.Println()
+		}
+
+		var req EmbeddingsReq
+		req.Model = model
+		req.Dimensions = dimensions
+		req.EncodingFormat = format
+
+		fmt.Println("enter text to embed")
+		scanner := bufio.NewScanner(os.Stdin)
+		s := output.String(">>> ")
+		fmt.Print(s.Foreground(output.Color("#FFDDDD")))
+		var prompt string
+		scanner.Scan()
+		prompt = scanner.Text()
+		req.Prompt = prompt
+
+		resp, err := req.Send(baseurl, apikey)
+		if err != nil {
+			errstr := output.String(err.Error())
+			fmt.Println(errstr.Foreground(output.Color("#FF8888")))
+		}
+
+		embedding := resp.Data[0]
+		for i, val := range embedding.Embedding {
+			respstr := output.String(strconv.FormatFloat(float64(val), 'f', -1, 32))
+			fmt.Println(i, respstr.Foreground(output.Color("#CCCCFF")))
+		}
+
+		fmt.Println("usage:")
+		fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
+		fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
+		fmt.Println("press enter to continue")
+		fmt.Scanf("%d")
+	case 4:
 		os.Exit(0)
 	}
 }

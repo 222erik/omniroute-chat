@@ -173,7 +173,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			messages = append(messages, choice.ChatMessage)
 		}
 	case 3:
-		var model string
+		model := "ollama-local/embeddinggemma"
 		dimensions := 200
 		format := "float"
 

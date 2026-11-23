@@ -162,6 +162,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			choice := resp.Choices[0]
 			respstr := output.String(choice.Content)
 			fmt.Println(respstr.Foreground(output.Color("#CCCCFF")))
+			fmt.Println("model:", resp.Model)
 			fmt.Println("done because:", choice.FinishReason)
 			fmt.Println("usage:")
 			fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")

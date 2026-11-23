@@ -38,6 +38,7 @@ type ChatCompletionReq struct {
 
 type ChatCompletionResp struct {
 	Id    string `json:"id"`
+	Model string `json:"model"`
 	Usage struct {
 		CompletionsTokens int `json:"completion_tokens"`
 		PromptTokens      int `json:"prompt_tokens"`

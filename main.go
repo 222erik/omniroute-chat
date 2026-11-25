@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"time"
 
@@ -48,17 +49,6 @@ func (r *RespModels) Get(burl, apikey string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func (r *RespModels) Execute(output *tenv.Output) {
-	leng := len(r.Data)
-	for i := range leng {
-		fmt.Println(r.Data[leng-i-1].Id)
-	}
-	time.Sleep(1000) // just so it doesnt exit immediatelly
-	s := output.String("press enter when done")
-	fmt.Println(s.Foreground(output.Color("#FFDDDD")))
-	fmt.Scanf("%v", nil)
 }
 
 func main() {
@@ -106,11 +96,22 @@ func main() {
 }
 
 func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
+	var models RespModels
+	models.Get(baseurl, apikey)
+	var modelsList []string
+	leng := len(models.Data)
+	for i := range leng {
+		modelsList = append(modelsList, models.Data[i].Id)
+	}
 	switch c {
 	case 1:
-		var models RespModels
-		models.Get(baseurl, apikey)
-		models.Execute(output)
+		for i := range leng {
+			fmt.Println(modelsList[leng-i-1])
+		}
+		time.Sleep(1000) // doesn't exit immediately
+		s := output.String("press enter when done")
+		fmt.Println(s.Foreground(output.Color("#FFDDDD")))
+		fmt.Scanf("%v", nil)
 	case 2:
 		var messages []ChatMessage
 		var model string
@@ -120,10 +121,16 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		toolusage := "none"
 		verbosity := "low"
 
-		for model == "" {
+		for {
 			fmt.Print("Enter model ID: ")
 			fmt.Scanf("%s", &model)
-			fmt.Println()
+			if !slices.Contains(modelsList, model) {
+				fmt.Println("sorry, that isn't an available model")
+				continue
+			} else {
+				fmt.Println()
+				break
+			}
 		}
 
 		var req ChatCompletionReq
@@ -161,26 +168,33 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 
 			choice := resp.Choices[0]
 			respstr := output.String(choice.Content)
-			fmt.Println(respstr.Foreground(output.Color("#CCCCFF")))
-			fmt.Println("model:", resp.Model)
-			fmt.Println("done because:", choice.FinishReason)
-			fmt.Println("usage:")
-			fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
-			fmt.Println("completion:", resp.Usage.CompletionsTokens, "tokens")
-			fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
+			fmt.Println(respstr.Foreground(output.Color("#AAAAFF")))
+			fmt.Println(output.String(fmt.Sprintf("model: %s", resp.Model)).Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String(fmt.Sprintf("done because: %s", choice.FinishReason)).Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String("usage:").Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String(fmt.Sprintf("prompt: %d tokens", resp.Usage.PromptTokens)).Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String(fmt.Sprintf("completion: %d tokens", resp.Usage.CompletionsTokens)).Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String(fmt.Sprintf("total: %d tokens", resp.Usage.TotalTokens)).Foreground(output.Color("#DDFFDD")))
 			fmt.Println()
 
 			messages = append(messages, choice.ChatMessage)
 		}
 	case 3:
 		model := "ollama-local/embeddinggemma"
+		autoselect := true
 		var dimensions int
 		format := "float"
 
-		for model == "" {
+		for autoselect == false {
 			fmt.Print("Enter model ID: ")
 			fmt.Scanf("%s", &model)
-			fmt.Println()
+			if !slices.Contains(modelsList, model) {
+				fmt.Println("sorry, that isn't an available model")
+				continue
+			} else {
+				fmt.Println()
+				break
+			}
 		}
 
 		for dimensions == 0 {
@@ -195,6 +209,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		req.EncodingFormat = format
 
 		fmt.Println("type 'exit' to quit")
+		fmt.Println("enter text to embed")
 		scanner := bufio.NewScanner(os.Stdin)
 
 		for {
@@ -212,6 +227,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			if err != nil {
 				errstr := output.String(err.Error())
 				fmt.Println(errstr.Foreground(output.Color("#FF8888")))
+				continue
 			}
 
 			embedding := resp.Data[0]
@@ -220,9 +236,9 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 				fmt.Println(i, respstr.Foreground(output.Color("#CCCCFF")))
 			}
 
-			fmt.Println("usage:")
-			fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
-			fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
+			fmt.Println(output.String("usage:").Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String(fmt.Sprintf("prompt: %d tokens", resp.Usage.PromptTokens)).Foreground(output.Color("#DDFFDD")))
+			fmt.Println(output.String(fmt.Sprintf("total: %d tokens", resp.Usage.TotalTokens)).Foreground(output.Color("#DDFFDD")))
 		}
 	case 4:
 		os.Exit(0)

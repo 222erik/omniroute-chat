@@ -174,7 +174,7 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		}
 	case 3:
 		model := "ollama-local/embeddinggemma"
-		dimensions := 200
+		var dimensions int
 		format := "float"
 
 		for model == "" {
@@ -183,37 +183,47 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 			fmt.Println()
 		}
 
+		for dimensions == 0 {
+			fmt.Print("enter num of dimensions: ")
+			fmt.Scanf("%d", &dimensions)
+			fmt.Println()
+		}
+
 		var req EmbeddingsReq
 		req.Model = model
 		req.Dimensions = dimensions
 		req.EncodingFormat = format
 
-		fmt.Println("enter text to embed")
+		fmt.Println("type 'exit' to quit")
 		scanner := bufio.NewScanner(os.Stdin)
-		s := output.String(">>> ")
-		fmt.Print(s.Foreground(output.Color("#FFDDDD")))
-		var prompt string
-		scanner.Scan()
-		prompt = scanner.Text()
-		req.Prompt = prompt
 
-		resp, err := req.Send(baseurl, apikey)
-		if err != nil {
-			errstr := output.String(err.Error())
-			fmt.Println(errstr.Foreground(output.Color("#FF8888")))
+		for {
+			s := output.String(">>> ")
+			fmt.Print(s.Foreground(output.Color("#FFDDDD")))
+			var prompt string
+			scanner.Scan()
+			prompt = scanner.Text()
+			if prompt == "exit" {
+				break
+			}
+			req.Prompt = prompt
+
+			resp, err := req.Send(baseurl, apikey)
+			if err != nil {
+				errstr := output.String(err.Error())
+				fmt.Println(errstr.Foreground(output.Color("#FF8888")))
+			}
+
+			embedding := resp.Data[0]
+			for i, val := range embedding.Embedding {
+				respstr := output.String(strconv.FormatFloat(float64(val), 'f', -1, 32))
+				fmt.Println(i, respstr.Foreground(output.Color("#CCCCFF")))
+			}
+
+			fmt.Println("usage:")
+			fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
+			fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
 		}
-
-		embedding := resp.Data[0]
-		for i, val := range embedding.Embedding {
-			respstr := output.String(strconv.FormatFloat(float64(val), 'f', -1, 32))
-			fmt.Println(i, respstr.Foreground(output.Color("#CCCCFF")))
-		}
-
-		fmt.Println("usage:")
-		fmt.Println("prompt:", resp.Usage.PromptTokens, "tokens")
-		fmt.Println("total:", resp.Usage.TotalTokens, "tokens")
-		fmt.Println("press enter to continue")
-		fmt.Scanf("%d")
 	case 4:
 		os.Exit(0)
 	}

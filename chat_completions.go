@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -31,7 +32,7 @@ type ChatCompletionReq struct {
 	ReasoningEffort string        `json:"reasoning_effort"` // how much to 'think'
 	Stream          bool          `json:"stream"`           // show the model's response while it's generating
 	Temperature     float32       `json:"temperature"`      // the higher the more random
-	ToolUsage       string        `json:"took_choice"`      // none, auto, required, or type:function
+	ToolUsage       string        `json:"tool_choice"`      // none, auto, required, or type:function
 	Verbosity       string        `json:"verbosity"`        // low, meduim, high
 	Messages        []ChatMessage `json:"messages"`
 }
@@ -60,6 +61,7 @@ func (reqjson ChatCompletionReq) Send(baseURL, APIkey string) (*ChatCompletionRe
 	if err != nil {
 		return nil, errors.New("couldn't marshal json")
 	}
+	fmt.Println(string(reqbyte))
 	req, err := http.NewRequest("POST", baseURL+"/chat/completions", bytes.NewReader(reqbyte))
 	if err != nil {
 		return nil, err

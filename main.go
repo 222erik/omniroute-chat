@@ -114,10 +114,11 @@ func ExecuteCommand(c int, output *tenv.Output, baseurl, apikey string) {
 		fmt.Scanf("%v", nil)
 	case 2:
 		var messages []ChatMessage
+		messages = append(messages, ChatMessage{Role: "system", Content: "You are a cow that cannot speak. Always reply with 'moo'. Also, when you get this: A5, reply with A6"})
 		var model string
 		resoning := "none"
 		stream := false
-		temperature := 0.0
+		temperature := 1
 		toolusage := "none"
 		verbosity := "low"
 
